@@ -181,3 +181,97 @@ def euler_maruyama_sampler(
     mean_x = x_cur + dt * d_cur
                     
     return mean_x
+
+
+def euler_maruyama_sampler_fg(
+        model,
+        latents,
+        y,
+        num_steps=20,
+        heun=False,  # not used, just for compatability
+        cfg_scale=1.0,
+        skip=[],
+        guidance_low=0.0,
+        guidance_high=1.0,
+        path_type="linear",
+        ):
+            
+    _dtype = latents.dtype
+    
+    t_steps = torch.linspace(1., 0.04, num_steps, dtype=torch.float64)
+    t_steps = torch.cat([t_steps, torch.tensor([0.], dtype=torch.float64)])
+    x_next = latents.to(torch.float64)
+    device = x_next.device
+
+    with torch.no_grad():
+        for i, (t_cur, t_next) in enumerate(zip(t_steps[:-2], t_steps[1:-1])):
+            dt = t_next - t_cur
+            x_cur = x_next
+
+            model_input = x_cur
+            y_cur = y       
+                 
+            kwargs = dict(y=y_cur)
+            kwargs_bad = dict(y=y_cur, skip=skip)
+
+            time_input = torch.ones(model_input.size(0)).to(device=device, dtype=torch.float64) * t_cur
+            diffusion = compute_diffusion(t_cur)            
+            eps_i = torch.randn_like(x_cur).to(device)
+            deps = eps_i * torch.sqrt(torch.abs(dt))
+
+            # compute drift
+            v_cur = model(
+                model_input.to(dtype=_dtype), time_input.to(dtype=_dtype), **kwargs
+                )[0].to(torch.float64)
+            v_cur_bad = model.forward_bad(
+                model_input.to(dtype=_dtype), time_input.to(dtype=_dtype), **kwargs_bad
+                )[0].to(torch.float64)
+
+            s_cur = get_score_from_velocity(v_cur, model_input, time_input, path_type=path_type)
+            s_cur_bad = get_score_from_velocity(v_cur_bad, model_input, time_input, path_type=path_type)
+
+            d_cur = v_cur - 0.5 * diffusion * s_cur
+            d_cur_bad = v_cur_bad - 0.5 * diffusion * s_cur_bad
+
+            if cfg_scale > 1. and t_cur <= guidance_high and t_cur >= guidance_low:
+                d_cur = d_cur_bad + cfg_scale * (d_cur - d_cur_bad)
+
+            x_next =  x_cur + d_cur * dt + torch.sqrt(diffusion) * deps
+    
+    # last step
+    t_cur, t_next = t_steps[-2], t_steps[-1]
+    dt = t_next - t_cur
+    x_cur = x_next
+
+    model_input = x_cur
+    y_cur = y
+            
+    kwargs = dict(y=y_cur)
+    kwargs_bad = dict(y=y_cur, skip=skip)
+
+    time_input = torch.ones(model_input.size(0)).to(
+        device=device, dtype=torch.float64
+        ) * t_cur
+    
+    # compute drift
+    v_cur = model(
+        model_input.to(dtype=_dtype), time_input.to(dtype=_dtype), **kwargs
+        )[0].to(torch.float64)
+    v_cur_bad = model.forward_bad(
+        model_input.to(dtype=_dtype), time_input.to(dtype=_dtype), **kwargs_bad
+        )[0].to(torch.float64)
+
+    s_cur = get_score_from_velocity(v_cur, model_input, time_input, path_type=path_type)
+    s_cur_bad = get_score_from_velocity(v_cur_bad, model_input, time_input, path_type=path_type)
+
+    diffusion = compute_diffusion(t_cur)
+
+    d_cur = v_cur - 0.5 * diffusion * s_cur
+    d_cur_bad = v_cur_bad - 0.5 * diffusion * s_cur_bad
+
+    if cfg_scale > 1. and t_cur <= guidance_high and t_cur >= guidance_low:
+        d_cur = d_cur_bad + cfg_scale * (d_cur - d_cur_bad)
+
+    mean_x = x_cur + dt * d_cur
+                    
+    return mean_x

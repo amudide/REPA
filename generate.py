@@ -21,7 +21,7 @@ from PIL import Image
 import numpy as np
 import math
 import argparse
-from samplers import euler_sampler, euler_maruyama_sampler
+from samplers import euler_sampler, euler_maruyama_sampler, euler_maruyama_sampler_fg
 from utils import load_legacy_checkpoints, download_model
 
 def create_npz_from_sample_folder(sample_dir, num=50_000):
@@ -133,9 +133,16 @@ def main(args):
             guidance_high=args.guidance_high,
             path_type=args.path_type,
         )
+
+        if len(args.skip) > 0:
+            sampling_kwargs["skip"] = args.skip
+
         with torch.no_grad():
             if args.mode == "sde":
-                samples = euler_maruyama_sampler(**sampling_kwargs).to(torch.float32)
+                if len(args.skip) > 0:
+                    samples = euler_maruyama_sampler_fg(**sampling_kwargs).to(torch.float32)
+                else:
+                    samples = euler_maruyama_sampler(**sampling_kwargs).to(torch.float32)
             elif args.mode == "ode":
                 samples = euler_sampler(**sampling_kwargs).to(torch.float32)
             else:
@@ -199,6 +206,7 @@ if __name__ == "__main__":
     # sampling related hyperparameters
     parser.add_argument("--mode", type=str, default="ode")
     parser.add_argument("--cfg-scale",  type=float, default=1.5)
+    parser.add_argument("--skip", nargs="*", type=int, default=[])
     parser.add_argument("--projector-embed-dims", type=str, default="768,1024")
     parser.add_argument("--path-type", type=str, default="linear", choices=["linear", "cosine"])
     parser.add_argument("--num-steps", type=int, default=50)
