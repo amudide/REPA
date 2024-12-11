@@ -11,7 +11,7 @@ commands = [
         --mode=sde \
         --num-steps=250 \
         --cfg-scale={j} \
-        --skip {i} \
+        --skip={i} \
         --guidance-high=0.7"
     for j in [1.5, 1.8, 2.0, 1.25]
     for i in range(28)
