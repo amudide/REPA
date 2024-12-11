@@ -92,8 +92,13 @@ def main(args):
     # Create folder to save samples:
     model_string_name = args.model.replace("/", "-")
     ckpt_string_name = os.path.basename(args.ckpt).replace(".pt", "") if args.ckpt else "pretrained"
+
     folder_name = f"{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
                   f"cfg-{args.cfg_scale}-seed-{args.global_seed}-{args.mode}"
+    if len(args.skip) > 0:
+        folder_name = f"{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
+                  f"cfg-{args.cfg_scale}-skip-{args.skip}-seed-{args.global_seed}-{args.mode}"
+
     sample_folder_dir = f"{args.sample_dir}/{folder_name}"
     if rank == 0:
         os.makedirs(sample_folder_dir, exist_ok=True)
@@ -173,6 +178,7 @@ def main(args):
         print("Done.")
     dist.barrier()
     dist.destroy_process_group()
+    return sample_folder_dir
 
 
 if __name__ == "__main__":
@@ -219,4 +225,8 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
-    main(args)
+    sample_folder_dir = main(args)
+    
+    ref_path = "VIRTUAL_imagenet256_labeled.npz" if args.resolution == 256 else "VIRTUAL_imagenet512.npz"
+    cmd = f"python evaluations/evaluator.py evaluations/{ref_path} {sample_folder_dir}.npz"
+    os.system(f"{cmd} > results/{sample_folder_dir[8:]}.txt")
