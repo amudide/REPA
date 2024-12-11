@@ -1,8 +1,8 @@
 *.DS_Store
 *.npz
+*.pb
 .ipynb_checkpoints/
 __pycache__/
 .vscode/
-
 samples/
 pretrained_models/
