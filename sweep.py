@@ -10,9 +10,10 @@ commands = [
         --per-proc-batch-size=64 \
         --mode=sde \
         --num-steps=250 \
-        --cfg-scale=1.5 \
+        --cfg-scale={j} \
         --skip {i} \
         --guidance-high=0.7"
+    for j in [1.5, 1.8, 2.0, 1.25]
     for i in range(28)
 ]
 
