@@ -10,3 +10,5 @@ requests
 git+https://github.com/openai/CLIP.git
 ftfy
 regex
+tensorflow
+scipy
