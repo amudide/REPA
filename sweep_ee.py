@@ -18,7 +18,7 @@ commands = [
         --skip {skip} \
         --guidance-high=0.7"
     for skip in [suffix(i) for i in [27, 26, 25, 24, 23, 22, 21, 20, 19, 18]]
-    for cfg in [1.25, 1.5, 1.8]
+    for cfg in [1.1, 1.2, 1.5, 1.8]
 ]
 
 for c in commands:

@@ -94,10 +94,10 @@ def main(args):
     ckpt_string_name = os.path.basename(args.ckpt).replace(".pt", "") if args.ckpt else "pretrained"
 
     folder_name = f"{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
-                  f"cfg-{args.cfg_scale}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
+                  f"cfg-{args.cfg_scale}-glo-{args.guidance_low}-ghi-{args.guidance_high}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
     if len(args.skip) > 0:
         folder_name = f"{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
-                  f"cfg-{args.cfg_scale}-skip-{args.skip}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
+                  f"cfg-{args.cfg_scale}-glo-{args.guidance_low}-ghi-{args.guidance_high}-skip-{args.skip}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
 
     sample_folder_dir = f"{args.sample_dir}/{folder_name}"
     if rank == 0:
