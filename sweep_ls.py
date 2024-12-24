@@ -10,11 +10,11 @@ commands = [
         --per-proc-batch-size=64 \
         --mode=sde \
         --num-steps=250 \
-        --cfg-scale={j} \
-        --skip={i} \
-        --guidance-high=0.7"
-    for j in [1.5, 1.8, 2.0, 1.25]
-    for i in range(28)
+        --cfg-scale={cfg} \
+        --skip=6 \
+        --guidance-high={ghi}"
+    for ghi in [0.5, 0.4, 0.3]
+    for cfg in [2.0, 1.8]
 ]
 
 for c in commands:
@@ -22,3 +22,12 @@ for c in commands:
 
 for cmd in commands:
     os.system(cmd)
+
+'''
+
+cfg 2.0 - ghi 0.5 0.4 0.3 0.2 0.1
+cfg 1.8 - ghi 0.5 0.4 0.3 0.2 0.1
+cfg 1.65 - ghi 1.0 0.9 0.8 0.7 0.6 0.5 0.4
+cfg 1.35 - ghi 1.0 0.9 0.8 0.7 0.6 0.5 0.4
+
+'''
