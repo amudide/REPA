@@ -29,15 +29,20 @@ def create_npz_from_sample_folder(sample_dir, num=50_000):
     Builds a single .npz file from a folder of .png samples.
     """
     samples = []
+    missing = 0
     for i in tqdm(range(num), desc="Building .npz file from samples"):
-        sample_pil = Image.open(f"{sample_dir}/{i:06d}.png")
-        sample_np = np.asarray(sample_pil).astype(np.uint8)
-        samples.append(sample_np)
+        try:
+            sample_pil = Image.open(f"{sample_dir}/{i:06d}.png")
+            sample_np = np.asarray(sample_pil).astype(np.uint8)
+            samples.append(sample_np)
+        except:
+            missing += 1
     samples = np.stack(samples)
     assert samples.shape == (num, samples.shape[1], samples.shape[2], 3)
     npz_path = f"{sample_dir}.npz"
     np.savez(npz_path, arr_0=samples)
     print(f"Saved .npz file to {npz_path} [shape={samples.shape}].")
+    print(f"Missing {missing}")
     return npz_path
 
 
@@ -96,8 +101,8 @@ def main(args):
     folder_name = f"{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
                   f"cfg-{args.cfg_scale}-glo-{args.guidance_low}-ghi-{args.guidance_high}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
     if len(args.skip) > 0:
-        folder_name = f"{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
-                  f"cfg-{args.cfg_scale}-glo-{args.guidance_low}-ghi-{args.guidance_high}-skip-{args.skip}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
+        folder_name = f"EXP6_{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
+                  f"cfg-{args.cfg_scale}-glo-{args.guidance_low}-ghi-{args.guidance_high}-skip-{args.skip}-w-{args.w}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
 
     sample_folder_dir = f"{args.sample_dir}/{folder_name}"
     if rank == 0:
@@ -141,6 +146,7 @@ def main(args):
 
         if len(args.skip) > 0:
             sampling_kwargs["skip"] = args.skip
+            sampling_kwargs["w"] = args.w
 
         with torch.no_grad():
             if args.mode == "sde":
@@ -219,6 +225,7 @@ if __name__ == "__main__":
     parser.add_argument("--heun", action=argparse.BooleanOptionalAction, default=False) # only for ode
     parser.add_argument("--guidance-low", type=float, default=0.)
     parser.add_argument("--guidance-high", type=float, default=1.)
+    parser.add_argument("--w", type=float, default=1.)
 
     # will be deprecated
     parser.add_argument("--legacy", action=argparse.BooleanOptionalAction, default=False) # only for ode
@@ -228,5 +235,5 @@ if __name__ == "__main__":
     sample_folder_dir = main(args)
     
     ref_path = "VIRTUAL_imagenet256_labeled.npz" if args.resolution == 256 else "VIRTUAL_imagenet512.npz"
-    cmd = f"python evaluations/evaluator.py evaluations/{ref_path} {sample_folder_dir}.npz"
-    os.system(f"{cmd} > results/{sample_folder_dir[8:]}.txt")
+    cmd = f"python evaluations/evaluator.py evaluations/{ref_path} '{sample_folder_dir}.npz'"
+    os.system(f"{cmd} > 'results/{sample_folder_dir[8:]}.txt'")

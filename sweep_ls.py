@@ -10,11 +10,11 @@ commands = [
         --per-proc-batch-size=64 \
         --mode=sde \
         --num-steps=250 \
-        --cfg-scale={cfg} \
+        --cfg-scale=1.6 \
         --skip=6 \
-        --guidance-high={ghi}"
-    for ghi in [0.5, 0.4, 0.3]
-    for cfg in [2.0, 1.8]
+        --guidance-high=0.9 \
+        --w={w}"
+    for w in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 ]
 
 for c in commands:

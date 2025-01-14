@@ -191,6 +191,7 @@ def euler_maruyama_sampler_fg(
         heun=False,  # not used, just for compatability
         cfg_scale=1.0,
         skip=[],
+        w=1.0,
         guidance_low=0.0,
         guidance_high=1.0,
         path_type="linear",
@@ -212,7 +213,7 @@ def euler_maruyama_sampler_fg(
             y_cur = y       
                  
             kwargs = dict(y=y_cur)
-            kwargs_bad = dict(y=y_cur, skip=skip)
+            kwargs_bad = dict(y=y_cur, skip=skip, w=w)
 
             time_input = torch.ones(model_input.size(0)).to(device=device, dtype=torch.float64) * t_cur
             diffusion = compute_diffusion(t_cur)            
@@ -247,7 +248,7 @@ def euler_maruyama_sampler_fg(
     y_cur = y
             
     kwargs = dict(y=y_cur)
-    kwargs_bad = dict(y=y_cur, skip=skip)
+    kwargs_bad = dict(y=y_cur, skip=skip, w=w)
 
     time_input = torch.ones(model_input.size(0)).to(
         device=device, dtype=torch.float64

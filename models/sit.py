@@ -135,6 +135,24 @@ class SiTBlock(nn.Module):
 
         return x
 
+    def forward_attn(self, x, c, w):
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
+            self.adaLN_modulation(c).chunk(6, dim=-1)
+        )
+        x = x + gate_msa.unsqueeze(1) * self.attn(modulate(self.norm1(x), shift_msa, scale_msa))
+        x = x + w * gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(x), shift_mlp, scale_mlp))
+
+        return x
+
+    def forward_mlp(self, x, c, w):
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
+            self.adaLN_modulation(c).chunk(6, dim=-1)
+        )
+        x = x + w * gate_msa.unsqueeze(1) * self.attn(modulate(self.norm1(x), shift_msa, scale_msa))
+        x = x + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(x), shift_mlp, scale_mlp))
+
+        return x
+
 
 class FinalLayer(nn.Module):
     """
@@ -286,7 +304,7 @@ class SiT(nn.Module):
 
         return x, zs
     
-    def forward_bad(self, x, t, y, skip, return_logvar=False):
+    def forward_bad(self, x, t, y, skip, w, return_logvar=False):
         """
         Forward pass of SiT.
         x: (N, C, H, W) tensor of spatial inputs (images or latent representations of images)
@@ -305,6 +323,9 @@ class SiT(nn.Module):
         for i, block in enumerate(self.blocks):
             if i not in skip:
                 x = block(x, c)                      # (N, T, D)
+            else:
+                x = block.forward_mlp(x, c, w)
+            
             if (i + 1) == self.encoder_depth:
                 zs = [projector(x.reshape(-1, D)).reshape(N, T, -1) for projector in self.projectors]
         x = self.final_layer(x, c)                # (N, T, patch_size ** 2 * out_channels)
