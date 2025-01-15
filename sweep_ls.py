@@ -13,8 +13,8 @@ commands = [
         --cfg-scale={cfg} \
         --skip={skip} \
         --guidance-high=0.9"
-    for skip in range(27)
-    for cfg in [1.7]
+    for cfg in [1.5, 2.0, 2.5]
+    for skip in range(1, 27)
 ]
 
 for c in commands:
