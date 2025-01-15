@@ -11,11 +11,10 @@ commands = [
         --mode=sde \
         --num-steps=250 \
         --cfg-scale={cfg} \
-        --skip=6 \
-        --guidance-high=0.9 \
-        --w={w}"
-    for w in [0.5]
-    for cfg in [3.1, 3.2, 3.3, 3.4, 3.5, 3.6]
+        --skip={skip} \
+        --guidance-high=0.9"
+    for skip in range(27)
+    for cfg in [1.7]
 ]
 
 for c in commands:

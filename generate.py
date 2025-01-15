@@ -101,7 +101,7 @@ def main(args):
     folder_name = f"{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
                   f"cfg-{args.cfg_scale}-glo-{args.guidance_low}-ghi-{args.guidance_high}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
     if len(args.skip) > 0:
-        folder_name = f"EXP8_{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
+        folder_name = f"EXP-SWAP_{model_string_name}-{ckpt_string_name}-size-{args.resolution}-vae-{args.vae}-" \
                   f"cfg-{args.cfg_scale}-glo-{args.guidance_low}-ghi-{args.guidance_high}-skip-{args.skip}-w-{args.w}-samples-{args.num_fid_samples}-seed-{args.global_seed}-{args.mode}"
 
     sample_folder_dir = f"{args.sample_dir}/{folder_name}"

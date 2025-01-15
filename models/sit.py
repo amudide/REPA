@@ -303,7 +303,40 @@ class SiT(nn.Module):
         x = self.unpatchify(x)                   # (N, out_channels, H, W)
 
         return x, zs
-    
+
+    def forward_bad(self, x, t, y, skip, w, return_logvar=False):
+        """
+        Forward pass of SiT.
+        x: (N, C, H, W) tensor of spatial inputs (images or latent representations of images)
+        t: (N,) tensor of diffusion timesteps
+        y: (N,) tensor of class labels
+        skip: list of layers to skip
+        """
+        x = self.x_embedder(x) + self.pos_embed  # (N, T, D), where T = H * W / patch_size ** 2
+        N, T, D = x.shape
+
+        # timestep and class embedding
+        t_embed = self.t_embedder(t)                   # (N, D)
+        y = self.y_embedder(y, self.training)    # (N, D)
+        c = t_embed + y                                # (N, D)
+
+        for i, block in enumerate(self.blocks):
+            if i == skip[0]:
+                x = self.blocks[i + 1](x, c)                      # (N, T, D)
+                x = self.blocks[i](x, c)
+            elif i == skip[0] + 1:
+                pass
+            else:
+                x = block(x, c)
+            
+            if (i + 1) == self.encoder_depth:
+                zs = [projector(x.reshape(-1, D)).reshape(N, T, -1) for projector in self.projectors]
+        x = self.final_layer(x, c)                # (N, T, patch_size ** 2 * out_channels)
+        x = self.unpatchify(x)                   # (N, out_channels, H, W)
+
+        return x, zs
+        
+    '''
     def forward_bad(self, x, t, y, skip, w, return_logvar=False):
         """
         Forward pass of SiT.
@@ -332,35 +365,7 @@ class SiT(nn.Module):
         x = self.unpatchify(x)                   # (N, out_channels, H, W)
 
         return x, zs
-
-    def forward_swap(self, x, t, y, skip, w, return_logvar=False):
-        """
-        Forward pass of SiT.
-        x: (N, C, H, W) tensor of spatial inputs (images or latent representations of images)
-        t: (N,) tensor of diffusion timesteps
-        y: (N,) tensor of class labels
-        skip: list of layers to skip
-        """
-        x = self.x_embedder(x) + self.pos_embed  # (N, T, D), where T = H * W / patch_size ** 2
-        N, T, D = x.shape
-
-        # timestep and class embedding
-        t_embed = self.t_embedder(t)                   # (N, D)
-        y = self.y_embedder(y, self.training)    # (N, D)
-        c = t_embed + y                                # (N, D)
-
-        for i, block in enumerate(self.blocks):
-            if i not in skip:
-                x = block(x, c)                      # (N, T, D)
-            else:
-                x = block.forward_attn(x, c, w)
-            
-            if (i + 1) == self.encoder_depth:
-                zs = [projector(x.reshape(-1, D)).reshape(N, T, -1) for projector in self.projectors]
-        x = self.final_layer(x, c)                # (N, T, patch_size ** 2 * out_channels)
-        x = self.unpatchify(x)                   # (N, out_channels, H, W)
-
-        return x, zs
+    '''
 
 
 #################################################################################
