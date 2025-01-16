@@ -14,7 +14,7 @@ commands = [
         --skip={skip} \
         --guidance-high={ghi}"
     for ghi in [1.0]
-    for cfg in [1.6, 1.7, 1.8, 1.9, 2.0]
+    for cfg in [1.95]
     for skip in [9]
 ]
 
