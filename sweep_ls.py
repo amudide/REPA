@@ -12,9 +12,10 @@ commands = [
         --num-steps=250 \
         --cfg-scale={cfg} \
         --skip={skip} \
-        --guidance-high=0.9"
-    for cfg in [1.5, 2.0, 2.5]
-    for skip in range(1, 27)
+        --guidance-high={ghi}"
+    for ghi in [1.0]
+    for cfg in [1.6, 1.7, 1.8, 1.9, 2.0]
+    for skip in [9]
 ]
 
 for c in commands:
